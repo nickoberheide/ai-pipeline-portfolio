@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nick Oberheide | AI Agent Pipelines</title>
+<meta name="description" content="Two agentic intelligence pipelines built with Claude Code and the Model Context Protocol, documented at the architecture level.">
+<meta property="og:title" content="Nick Oberheide | AI Agent Pipelines">
+<meta property="og:description" content="Two agentic intelligence pipelines built with Claude Code and the Model Context Protocol, documented at the architecture level.">
+<meta property="og:type" content="website">
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+:root {
+  --bg: #f8f6f1;
+  --surface: #ffffff;
+  --ink: #1d1c1a;
+  --muted: #5d5951;
+  --line: #dedad0;
+  --accent: #0e5a4c;
+  --accent-soft: #e2efeb;
+  --check: #7a4f00;
+  --check-soft: #fbf1dc;
+  --check-line: #e3c98c;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131311;
+    --surface: #1c1b18;
+    --ink: #ebe8e1;
+    --muted: #a8a397;
+    --line: #302e29;
+    --accent: #78cdb9;
+    --accent-soft: #17312c;
+    --check: #e8bd66;
+    --check-soft: #2c240f;
+    --check-line: #5c4a1c;
+  }
+}
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+code { font: 0.92em ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+
+header.site { padding: 64px 0 32px; }
+.eyebrow {
+  margin: 0 0 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+h1, h2 { font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; font-weight: 600; letter-spacing: -0.01em; }
+h1 { margin: 0 0 18px; font-size: clamp(2rem, 5.2vw, 3rem); line-height: 1.12; }
+.lede { margin: 0 0 22px; max-width: 42em; font-size: 1.15rem; color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0; padding: 0; list-style: none; font-size: 0.95rem; color: var(--muted); }
+
+nav.toc {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+nav.toc ul { display: flex; flex-wrap: wrap; gap: 4px 24px; margin: 0; padding: 12px 0; list-style: none; font-size: 0.95rem; }
+nav.toc a { color: var(--ink); text-decoration: none; }
+nav.toc a:hover { color: var(--accent); text-decoration: underline; }
+
+section { padding: 52px 0; border-bottom: 1px solid var(--line); scroll-margin-top: 52px; }
+.num { margin: 0 0 8px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+h2 { margin: 0 0 12px; font-size: clamp(1.5rem, 3.6vw, 2rem); line-height: 1.2; }
+.summary { margin: 0; max-width: 44em; }
+h3 { margin: 40px 0 14px; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+ul.plain { margin: 0; padding-left: 1.15em; max-width: 46em; }
+ul.plain li { margin: 0 0 8px; }
+.spec { margin: 28px 0 0; font-size: 0.97rem; }
+
+ol.flow { max-width: 620px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
+ol.flow > li {
+  position: relative;
+  margin: 0 0 20px;
+  padding: 14px 16px 14px 58px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  counter-increment: step;
+}
+ol.flow > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 15px;
+  top: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 28px;
+  text-align: center;
+}
+ol.flow > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  bottom: -21px;
+  width: 2px;
+  height: 20px;
+  background: var(--line);
+}
+ol.flow > li.check { background: var(--check-soft); border-color: var(--check-line); }
+ol.flow > li.check::before { background: var(--check); color: var(--check-soft); }
+.step-title { display: block; font-weight: 650; }
+.step-body { display: block; font-size: 0.97rem; color: var(--muted); }
+.outs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.out { padding: 8px 10px; border: 1px dashed var(--line); border-radius: 8px; font-size: 0.95rem; }
+.out b { display: block; }
+.flow-note { max-width: 620px; margin: 4px 0 0; font-size: 0.93rem; color: var(--muted); }
+.legend { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; border-radius: 3px; background: var(--check-soft); border: 1px solid var(--check-line); }
+
+ol.decisions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: d;
+}
+ol.decisions li {
+  padding: 16px 18px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 0.97rem;
+  counter-increment: d;
+}
+ol.decisions li::before {
+  content: "0" counter(d);
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+ol.decisions strong { display: block; margin-bottom: 4px; font-size: 1rem; }
+
+footer { padding: 36px 0 64px; font-size: 0.93rem; color: var(--muted); }
+footer p { margin: 0 0 10px; max-width: 48em; }
+
+@media (max-width: 520px) {
+  body { font-size: 16px; }
+  header.site { padding-top: 44px; }
+  .outs { grid-template-columns: 1fr; }
+  ol.decisions { grid-template-columns: 1fr; }
+}
+@media print {
+  nav.toc { position: static; }
+  section { padding: 28px 0; }
+  ol.flow > li, ol.decisions li { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <p class="eyebrow">Nick Oberheide · Architecture portfolio</p>
+    <h1>AI agent pipelines, documented at the architecture level</h1>
+    <p class="lede">Two agentic intelligence pipelines, built with Claude Code and the Model Context Protocol (MCP). Each write-up covers what the pipeline does, how the pieces fit together, and the design decisions behind it.</p>
+    <ul class="meta">
+      <li>Indianapolis, IN</li>
+      <li><a href="https://www.linkedin.com/in/nickoberheide">LinkedIn</a></li>
+      <li><a href="https://github.com/nickoberheide/ai-pipeline-portfolio">Source on GitHub</a></li>
+    </ul>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <div class="wrap">
+    <ul>
+      <li><a href="#sales-intelligence">Sales intelligence</a></li>
+      <li><a href="#competitive-intelligence">Competitive intelligence</a></li>
+      <li><a href="#how-built">How these were built</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main>
+
+<section id="sales-intelligence">
+  <div class="wrap">
+    <p class="num">Project 1</p>
+    <h2>Sales Intelligence Agent Pipeline</h2>
+    <p class="summary">A 13-stage agentic pipeline that builds, ranks, and researches a list of 120 public-sector accounts for a B2G sales team, using only free public sources.</p>
+
+    <h3>What it does</h3>
+    <ul class="plain">
+      <li>Builds a universe of public-sector agencies from public registries and directories, ranks them by published budget, and promotes the top 120 to an active list.</li>
+      <li>Identifies named decision-makers under a verification-first rule.</li>
+      <li>Collects dated buying signals from public sources: trade press, procurement portals, grant databases, oversight board records, leadership changes, and local news.</li>
+      <li>Scores every account with a deterministic model, then verifies the model's arithmetic before anything is saved.</li>
+      <li>Delivers a ranked account list with a short playbook per account to Notion, and a run summary to Slack.</li>
+    </ul>
+
+    <h3>Architecture</h3>
+    <ol class="flow">
+      <li><span class="step-title">Public sources</span><span class="step-body">Registries, budget documents, procurement portals, grant databases, trade press, local news.</span></li>
+      <li><span class="step-title">Stages 1 to 3</span><span class="step-body">Universe build, budget ranking, decision-maker discovery.</span></li>
+      <li><span class="step-title">Stages 4 to 12</span><span class="step-body">Signal collection and research.</span></li>
+      <li class="check"><span class="step-title">Buying-window gate</span><span class="step-body">Derives hot, warm, or cold from dated signals.</span></li>
+      <li><span class="step-title">Stage 13</span><span class="step-body">Deterministic scoring through the Anthropic API.</span></li>
+      <li class="check"><span class="step-title">Verification</span><span class="step-body">Recalculates the total, derives the tier mechanically, overwrites the model's values.</span></li>
+      <li><span class="step-title">Delivery</span>
+        <div class="outs">
+          <div class="out"><b>Notion</b>Accounts, signals, playbooks.</div>
+          <div class="out"><b>Slack</b>Run summary.</div>
+        </div>
+      </li>
+    </ol>
+    <p class="flow-note">GitHub Actions runs the stages on biweekly, monthly, and quarterly schedules, plus manual runs.</p>
+    <p class="flow-note"><span class="legend" aria-hidden="true"></span>Highlighted steps are mechanical checks or safeguards, not model output.</p>
+
+    <h3>Design decisions</h3>
+    <ol class="decisions">
+      <li><strong>Separate stages, never collapsed.</strong>Ranking, contact discovery, signal collection, and scoring are distinct stages. A failure in one is logged and the run continues, so a single bad source cannot abort a full run.</li>
+      <li><strong>Source tiers and corroboration.</strong>Sources are ranked from authoritative government records down to aggregators. A lower-tier signal cannot be promoted to high significance without corroboration from a higher tier, and every signal carries a source URL. A signal with a missing citation is dropped, not logged.</li>
+      <li><strong>Staleness is a quality dimension.</strong>A signal older than 18 months does not count as current, unless it is a multi-year contract whose renewal window is approaching.</li>
+      <li><strong>The buying window is derived before scoring.</strong>A gate computes hot, warm, or cold from the dated signals linked to each account, then passes the result to the scoring step as a fixed input. The model never re-derives it, so the window reflects current dates and not stale stored values.</li>
+      <li><strong>The model's arithmetic is not trusted.</strong>After each scoring call, a verification step recalculates the total from the component values and derives the tier mechanically. Any mismatch is logged, and the stored score and tier are always overwritten with the mechanical values.</li>
+      <li><strong>Failure-safe writes.</strong>A backup is written before any database write. If a scoring call fails or returns unparseable output, no scoring fields are written and the existing values stay. A fallback or zeroed score is never written over a real one.</li>
+      <li><strong>Playbooks cannot drift.</strong>Playbook text never embeds scores. After scoring, any account whose score moved by more than one point has its playbook regenerated.</li>
+      <li><strong>Responsible collection.</strong>Free public sources only, no paid data brokers. A blocked source is skipped and logged, a rate limit gets one retry after a pause, and bot detection is never bypassed.</li>
+    </ol>
+
+    <p class="spec">Full specification: <a href="https://github.com/nickoberheide/ai-pipeline-portfolio/blob/main/docs/sales-intelligence-spec.md">sales-intelligence-spec.md</a></p>
+  </div>
+</section>
+
+<section id="competitive-intelligence">
+  <div class="wrap">
+    <p class="num">Project 2</p>
+    <h2>Competitive Intelligence Agent Pipeline</h2>
+    <p class="summary">A 12-stage agentic pipeline that tracks about 20 competitors of a healthcare AI company across public data sources, detects what changed, scores each competitor's threat level against the company's product pillars, and delivers executive-ready summaries.</p>
+
+    <h3>What it does</h3>
+    <ul class="plain">
+      <li>Runs a sweep across regulatory filings, patents, clinical trials, FDA data, publications, trade press, company newsrooms, conference abstracts, funding and headcount signals, and software review sites.</li>
+      <li>Detects change by comparing each competitor against a stored snapshot, and logs each material change as a dated, sourced event.</li>
+      <li>Scores every competitor with a weighted threat model: binary checks against five product pillars plus a market momentum modifier, mapped to High, Medium, or Low with a monitoring cadence for each.</li>
+      <li>Finds new entrants and holds them for human review.</li>
+      <li>Writes updates to Notion, a run summary page, a local backup, and a Slack notification. A full sweep took 13 to 19 minutes in its first runs.</li>
+    </ul>
+
+    <h3>Architecture</h3>
+    <ol class="flow">
+      <li><span class="step-title">Triggers</span><span class="step-body">Notion button, weekly schedule, mobile dispatch, chat message.</span></li>
+      <li><span class="step-title">Trigger queue</span><span class="step-body">One queue in Notion for every trigger.</span></li>
+      <li><span class="step-title">PowerShell watcher</span><span class="step-body">Polls the queue every 60 seconds.</span></li>
+      <li><span class="step-title">Claude Code</span><span class="step-body">Runs the agent spec.</span></li>
+      <li><span class="step-title">12 stages</span><span class="step-body">Filings, press, newsrooms, patents, trials, FDA, publications, conferences, funding, headcount, reviews, discovery.</span></li>
+      <li><span class="step-title">Snapshot diff</span><span class="step-body">Detects what changed.</span></li>
+      <li><span class="step-title">Threat scoring</span><span class="step-body">Pillar vectors plus a momentum modifier.</span></li>
+      <li class="check"><span class="step-title">Local Markdown backup</span><span class="step-body">Written first, before any API write.</span></li>
+      <li><span class="step-title">Notion</span><span class="step-body">Competitors, events, run summary.</span></li>
+      <li><span class="step-title">Slack</span><span class="step-body">Notification.</span></li>
+    </ol>
+    <p class="flow-note"><span class="legend" aria-hidden="true"></span>Highlighted steps are mechanical checks or safeguards, not model output.</p>
+
+    <h3>Design decisions</h3>
+    <ol class="decisions">
+      <li><strong>One queue, four triggers.</strong>A Notion button, a weekly schedule, a mobile dispatch task, and a chat message all write a row to the same trigger queue, so every run takes a single execution path no matter how it started.</li>
+      <li><strong>A thin deterministic wrapper around an agent.</strong>A polling script owns scheduling, status updates, and locking. The agent owns the research. Two pipelines on the same host share no state: each has its own directory, scheduled task, and lock.</li>
+      <li><strong>Backup first.</strong>A local Markdown copy of the run is written before any API write, so the output exists even if Notion is unavailable.</li>
+      <li><strong>Source tiers and corroboration.</strong>Filings and government databases rank above trade press, which ranks above self-reported and aggregator sources. A lower-tier source cannot support a high-significance event on its own, and headcount estimates from search are treated as directional only.</li>
+      <li><strong>Change detection by snapshot diff.</strong>After each run, a per-competitor snapshot is saved. Events come from differences against it, and a newsroom page change above a size threshold is flagged for manual review instead of being labeled a launch automatically.</li>
+      <li><strong>Scoring is binary and grounded in product language.</strong>Each pillar is a yes or no check against public product descriptions, which is more reliable than inferring maturity. Pillars that are hard to detect use proxy phrases. The momentum modifier keeps funding signal in the score without letting it dominate, and a threat level is never left blank.</li>
+      <li><strong>Humans gate discovery.</strong>The discovery stage has a high false-positive rate, so new entities are written as Unverified and promoted by a person. Auto-promotion is never enabled.</li>
+      <li><strong>Built for executives, not engineers.</strong>The competitor database is a gallery grouped by threat level, with a Slack summary and a one-click trigger. The tooling is infrastructure, and the output is the product.</li>
+    </ol>
+
+    <p class="spec">Full specification: <a href="https://github.com/nickoberheide/ai-pipeline-portfolio/blob/main/docs/competitive-intelligence-spec.md">competitive-intelligence-spec.md</a></p>
+  </div>
+</section>
+
+<section id="how-built">
+  <div class="wrap">
+    <p class="num">Method</p>
+    <h2>How these were built</h2>
+    <p class="summary">Both were built with Claude Code. Each pipeline is an agent specification (stage definitions, source policy, scoring rules, and verification logic) that Claude Code executes, with Notion as the data store and Slack for notifications. They are spec-driven agent systems, not conventional application codebases. The competitive intelligence pipeline also includes PowerShell scripts that poll a trigger queue and launch runs on a Windows host.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Not included.</strong> The working implementations are kept private because they contain the sponsoring organizations' operating details. That covers the prompts, signal definitions and scoring weights, account and competitor lists, customer and pricing information, contact data, and workspace identifiers.</p>
+    <p>Nick Oberheide, Indianapolis, IN.</p>
+  </div>
+</footer>
+
+</body>
+</html>
